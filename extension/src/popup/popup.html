@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Noise Simplifier</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header class="head">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" class="logo" aria-hidden="true">
+        <path d="M3 12h2.2l1.6-5 2 10 2-13 2 16 2-11 1.6 5H21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div>
+        <h1>Noise Simplifier</h1>
+        <p class="sub" id="tabTitle">Meeting voice cleaner</p>
+      </div>
+    </div>
+    <span class="pill" id="statusPill">idle</span>
+  </header>
+
+  <button id="primary" class="primary">Clean this tab</button>
+  <p class="hint" id="statusDetail">Removes fans, keyboards, traffic and room tone while you keep talking.</p>
+
+  <section class="meters" aria-live="off">
+    <div class="meter">
+      <span class="meter-label">in</span>
+      <div class="bar"><i id="meterIn" style="width:0%"></i></div>
+      <span class="meter-value" id="meterInValue">—</span>
+    </div>
+    <div class="meter">
+      <span class="meter-label">out</span>
+      <div class="bar out"><i id="meterOut" style="width:0%"></i></div>
+      <span class="meter-value" id="meterOutValue">—</span>
+    </div>
+    <div class="readout">
+      <span>noise below voice</span>
+      <strong id="suppression">—</strong>
+    </div>
+  </section>
+
+  <section class="controls">
+    <label class="row">
+      <span>Engine</span>
+      <select id="mode">
+        <option value="rnnoise">RNNoise · fastest</option>
+        <option value="spectral">Spectral · adjustable</option>
+        <option value="hybrid">Hybrid · strongest</option>
+      </select>
+    </label>
+    <p class="hint small" id="modeHint"></p>
+
+    <label class="row">
+      <span>Strength</span>
+      <input type="range" id="strength" min="0" max="100" step="5">
+      <output id="strengthValue">75%</output>
+    </label>
+
+    <div class="presets">
+      <button data-preset="quietRoom" class="chip">Quiet room</button>
+      <button data-preset="balanced" class="chip">Balanced</button>
+      <button data-preset="loudOffice" class="chip">Loud office</button>
+      <button data-preset="softVoice" class="chip">Soft voice</button>
+    </div>
+
+    <label class="row switch">
+      <input type="checkbox" id="voiceFocus">
+      <span>Voice focus <em>cuts rumble &amp; hiss outside the speech band</em></span>
+    </label>
+    <label class="row switch">
+      <input type="checkbox" id="autoGain">
+      <span>Auto gain <em>lifts quiet talkers to a steady level</em></span>
+    </label>
+
+    <button id="compare" class="ghost">Hold to hear the original</button>
+  </section>
+
+  <footer class="foot">
+    <span>Tip: use headphones so the meeting does not re-capture the cleaned audio.</span>
+    <span class="kbd">Alt+Shift+N</span>
+  </footer>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>
