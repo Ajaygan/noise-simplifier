@@ -81,6 +81,25 @@ Everything is stored in `chrome.storage.local` and applied live.
 
 Requires Chrome 116+ (AudioWorklet + offscreen document APIs).
 
+### Troubleshooting
+
+* **"not compiled for this environment (did you build to HTML and try to run it
+  not on the web, …)"** in the popup — the vendored RNNoise build is
+  `-sENVIRONMENT=web`, so it starts by feature-testing
+  `typeof window == "object" || typeof WorkerGlobalScope < "u"`.
+  Chrome's `AudioWorkletGlobalScope` has neither, and the bundle used to throw
+  before it was shimmed: `denoise.worklet.src.js` publishes a `WorkerGlobalScope`
+  stand-in before the vendored module is evaluated (the WASM is embedded as
+  base64 and instantiates synchronously, so nothing else in that build needs a
+  DOM). If you see this message it means Chrome loaded a **stale or hand-edited**
+  `extension/dist/denoise.worklet.js`: run `node tools/build-worklets.mjs`, then
+  hit reload on `chrome://extensions`.
+* **No audio after starting** — Chrome only hands over tab audio once the tab is
+  actually playing sound, so start the capture while the meeting is talking. Use
+  headphones: with speakers the cleaned audio goes back into your microphone.
+* **Alt+Shift+N does nothing** — the shortcut only works while a Chrome window is
+  focused; use the popup button instead.
+
 ---
 
 ## 2. Python: recordings, batches, service

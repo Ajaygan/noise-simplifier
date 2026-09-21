@@ -10,6 +10,26 @@
  * Edit the sources, never the generated file.
  */
 
+/*
+ * Emscripten environment shim — must run before the vendored RNNoise module.
+ *
+ * That build is compiled with `-sENVIRONMENT=web` and its entry point starts with:
+ *
+ *   if (!(typeof window == "object" || typeof WorkerGlobalScope < "u"))
+ *     throw new Error("not compiled for this environment ...");
+ *
+ * Chrome's AudioWorkletGlobalScope is worker-like but exposes neither `window`
+ * nor the `WorkerGlobalScope` constructor, so the feature test threw as soon as
+ * the engine initialised ("Clean the tab" failed with exactly that message).
+ * Nothing in the module needs the DOM: the WASM is embedded as base64, it
+ * instantiates via `WebAssembly.instantiate` and never calls fetch/importScripts/
+ * document. Publishing a stand-in global satisfies the feature test — nothing
+ * reads `WorkerGlobalScope` for anything else (verified: one occurrence).
+ */
+if (typeof WorkerGlobalScope === 'undefined') {
+  globalThis.WorkerGlobalScope = function WorkerGlobalScope() {};
+}
+
 /* BUILD:INCLUDE extension/src/settings.js */
 /* BUILD:INCLUDE extension/src/dsp/spectral.js */
 /* BUILD:INCLUDE extension/src/dsp/engine.js */

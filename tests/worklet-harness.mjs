@@ -2,10 +2,16 @@
  * Runs the *generated* AudioWorklet bundle in Node so the exact artifact that
  * ships in the extension can be exercised in tests.
  *
- * The bundle is a classic script (AudioWorklet global scope is not a module
- * context), so it is evaluated with `node:vm` against a minimal, spec-shaped
- * worklet global scope. That also guarantees the build step never leaves
- * `import`/`export`/`import.meta` in the shipped file.
+ * `addModule()` parses the bundle as a module, so it is evaluated with
+ * `node:vm` in strict mode against a minimal, spec-shaped worklet global scope
+ * (which also guarantees the build step never leaves `import`/`export`/
+ * `import.meta` in the shipped file).
+ *
+ * The scope deliberately mirrors Chrome: **no** `window`, `WorkerGlobalScope`,
+ * `atob` or `setTimeout`. Faking those here once hid a real failure — the
+ * vendored RNNoise build feature-tests `window`/`WorkerGlobalScope` and threw
+ * "not compiled for this environment" inside real worklets while the tests
+ * stayed green.
  */
 
 import { readFileSync } from 'node:fs';
@@ -43,22 +49,17 @@ export function loadWorklet({ sampleRate = 48000 } = {}) {
   let Processor = null;
   const registry = new Map();
 
+  // Deliberately *only* what a real AudioWorkletGlobalScope exposes: no
+  // `window`, no `WorkerGlobalScope`, no `atob`/`setTimeout`/`performance`.
+  // Injecting those here once hid a real bug — the vendored RNNoise build
+  // feature-detects `typeof window == "object" || typeof WorkerGlobalScope < "u"`
+  // and threw "not compiled for this environment" inside Chrome's worklet.
   const sandbox = {
     console,
     sampleRate,
-    // AudioWorkletGlobalScope extends WorkerGlobalScope; Emscripten and other
-    // libraries feature-detect it, so the harness has to provide it.
-    self: null,
-    WorkerGlobalScope: class WorkerGlobalScope {},
     currentTime: 0,
     currentFrame: 0,
-    atob: (s) => Buffer.from(s, 'base64').toString('binary'),
-    btoa: (s) => Buffer.from(s, 'binary').toString('base64'),
     TextDecoder,
-    TextEncoder,
-    setTimeout,
-    clearTimeout,
-    performance,
     WebAssembly,
     Promise,
     AudioWorkletProcessor: class {
@@ -71,10 +72,10 @@ export function loadWorklet({ sampleRate = 48000 } = {}) {
       Processor = cls;
     },
   };
-  sandbox.self = sandbox;
-  sandbox.globalThis = sandbox;
   const context = vm.createContext(sandbox);
-  vm.runInContext(code, context, { filename: 'denoise.worklet.js' });
+  // `addModule()` parses the bundle as a *module*, so the worklet runs in strict
+  // mode; evaluate it the same way here rather than allowing sloppy code.
+  vm.runInContext(`"use strict";\n${code}`, context, { filename: 'denoise.worklet.js' });
 
   if (!Processor) throw new Error('worklet did not call registerProcessor');
 
@@ -85,7 +86,12 @@ export function loadWorklet({ sampleRate = 48000 } = {}) {
     /** Create a processor and wait for the engine to finish loading. */
     async create({ channels = 1, settings = {} } = {}) {
       const proc = new Processor({ processorOptions: { channels, settings } });
-      await waitFor(() => proc.engine !== null, 20000);
+      const failed = () => proc.port.messages.find((m) => m.type === 'error');
+      await waitFor(() => proc.engine !== null || failed(), 20000);
+      // Surface the worklet's own error instead of a bare timeout.
+      const err = failed();
+      if (err) throw new Error(`worklet engine failed to initialise: ${err.error}`);
+      if (proc.engine === null) throw new Error('waitFor: engine never finished loading');
       return proc;
     },
   };

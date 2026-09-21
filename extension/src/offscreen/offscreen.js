@@ -29,6 +29,22 @@ function reportStatus(status, extra = {}) {
   post({ target: 'background', type: 'status', status, ...extra });
 }
 
+/**
+ * The popup prints engine failures verbatim, and some of them (Emscripten's
+ * "not compiled for this environment", for instance) say nothing about what to
+ * do. Keep the original text, add the fix for the one known trap: a stale
+ * `dist/denoise.worklet.js` that predates a source change.
+ */
+function explainEngineError(message) {
+  const text = String(message);
+  if (/not compiled for this environment/.test(text)) {
+    return `${text} — the worklet bundle is stale or was built for a different ` +
+      'environment. Run "node tools/build-worklets.mjs", then reload the extension ' +
+      'in chrome://extensions and try again.';
+  }
+  return text;
+}
+
 async function startCapture({ streamId, settings, tabId }) {
   // Tear down anything that is already running before taking the token.
   await stopCapture('restart');
@@ -70,7 +86,7 @@ async function startCapture({ streamId, settings, tabId }) {
     if (msg.type === 'meter') {
       latestMetrics = msg;
     } else if (msg.type === 'error') {
-      reportStatus('error', { error: msg.error });
+      reportStatus('error', { error: explainEngineError(msg.error) });
     } else if (msg.type === 'ready') {
       reportStatus('running', { detail: `engine ${msg.mode} @ ${msg.sampleRate} Hz` });
     }
@@ -135,8 +151,9 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       startCapture(message)
         .then(sendResponse)
         .catch(async (err) => {
-          reportStatus('error', { error: String(err.message || err) });
-          sendResponse({ ok: false, error: String(err.message || err) });
+          const detail = explainEngineError(err.message || err);
+          reportStatus('error', { error: detail });
+          sendResponse({ ok: false, error: detail });
         });
       return true;
     case 'stop':
