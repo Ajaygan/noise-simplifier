@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "noisesimplifier"
+version = "0.1.0"
+description = "Offline noise removal for meeting recordings (Python side of the Noise Simplifier extension)"
+readme = "../README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = ["numpy>=1.24", "scipy>=1.10"]
+
+[project.optional-dependencies]
+io = ["soundfile>=0.12"]
+service = ["fastapi>=0.110", "uvicorn>=0.29"]
+dev = ["pytest>=8", "httpx>=0.27"]
+
+[project.scripts]
+noisesimplifier = "noisesimplifier.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["noisesimplifier*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-q"

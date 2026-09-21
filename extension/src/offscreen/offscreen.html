@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Noise Simplifier — audio engine</title>
+</head>
+<body>
+  <!--
+    Invisible document. It exists only to own the audio graph: the tab capture
+    stream, the AudioWorklet that denoises it, and the MediaStreamAudioSource
+    that plays the cleaned audio back to the tab (so the meeting sends the
+    cleaned signal). All of the logic lives in offscreen.js.
+  -->
+  <script type="module" src="offscreen.js"></script>
+</body>
+</html>
