@@ -6,6 +6,11 @@ speech. It works on **any** meeting that plays in a browser tab (Google Meet,
 Zoom, Teams, Jitsi, Discord, Whereby…), because it processes the tab's audio
 instead of relying on the meeting app.
 
+> **Also in this repo:** [`engine/`](engine/README.md), *Spud Engine*, a separate
+> project. It is a low-end-friendly, PS3-style browser game engine with an
+> Unreal-style editor, Blueprint-style visual scripting and a built-in
+> character auto-rigger. It is independent of the noise simplifier.
+
 There are two halves:
 
 | | where | what it is for |

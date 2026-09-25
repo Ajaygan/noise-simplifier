@@ -1,0 +1,18 @@
+{
+  "name": "spud-engine",
+  "version": "1.0.0",
+  "description": "Spud Engine - a low-end friendly, PS3-style game engine and editor that runs in the browser",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "dev": "node tools/serve.mjs"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "three": "^0.186.1"
+  },
+  "type": "module",
+  "private": true
+}

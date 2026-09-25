@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spud Engine: Editor</title>
+  <meta name="description" content="A PS3-style game engine and editor that runs on potato hardware.">
+  <link rel="stylesheet" href="css/editor.css">
+</head>
+<body>
+  <div id="app">
+    <header id="menubar"></header>
+    <nav id="toolbar"></nav>
+    <main id="main">
+      <aside id="place" class="panel"></aside>
+      <section id="center">
+        <div id="viewport">
+          <div id="loading"><div class="spinner"></div>Starting Spud Engine…</div>
+        </div>
+        <div id="bottom" class="panel"></div>
+      </section>
+      <aside id="right">
+        <div id="outliner" class="panel"></div>
+        <div id="details" class="panel"></div>
+      </aside>
+    </main>
+    <footer id="statusbar"><span id="status-msg">Ready</span><span class="spacer"></span><span id="status-fps"></span></footer>
+  </div>
+  <!-- Single classic script: works from file:// on machines without a web server -->
+  <script src="app/editor.js"></script>
+</body>
+</html>
